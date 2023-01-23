@@ -13,11 +13,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.example.weather.api.RetrofitClient;
 import com.example.weather.models.Units;
@@ -96,7 +99,11 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.btn_refresh:
-                loadData(true);
+                if (isNetworkAvailable()) {
+                    loadData(true);
+                } else {
+                    showMessage("Internet connection is not available.");
+                }
                 return true;
             case R.id.btn_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
@@ -155,11 +162,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadData(boolean forceReload) {
         WeatherCache d = FileManager.readCacheData(this);
+        boolean isNetwork = isNetworkAvailable();
+
         if (
-                forceReload ||
-                d == null ||
-                !d.getCurrentForecast().getName().equals(cityName) ||
-                settingsChanged
+                isNetwork &&
+                (
+                    forceReload ||
+                    d == null ||
+                    !d.getCurrentForecast().getName().equals(cityName) ||
+                    settingsChanged
+                )
         ) {
             loadedData = 0;
 
@@ -189,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
                     MainActivity.loadedData++;
                     if (MainActivity.loadedData >= 2)
                         dialog.dismiss();
+                    showMessage("Cannot get data from the server.");
                 }
             });
 
@@ -213,12 +226,34 @@ public class MainActivity extends AppCompatActivity {
                     MainActivity.loadedData++;
                     if (MainActivity.loadedData >= 2)
                         dialog.dismiss();
+                    showMessage("Cannot get data from the server.");
                 }
             });
-        } else {
+        } else if (d != null) {
+            if (!isNetwork) {
+                showMessage("Internet connection is not available, therefore the data could be not up-to-date.");
+            }
+
             setData(d.getCurrentForecast());
             setDailyForecast(d.getDailyForecast());
+        } else {
+            showMessage("Internet connection is not available.");
         }
+    }
+
+    private void showMessage(String text) {
+        Context context = getApplicationContext();
+        int duration = Toast.LENGTH_LONG;
+
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager != null ? connectivityManager.getActiveNetworkInfo() : null;
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
     private static class ScreenSlidePageAdapter extends FragmentStateAdapter {
