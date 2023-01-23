@@ -13,6 +13,7 @@ public class WeatherData {
     private float visibility;
     private WeatherWind wind;
     private WeatherCoord coord;
+    private WeatherSys sys;
 
     public Date getSaveDate() {
         return saveDate;
@@ -76,5 +77,13 @@ public class WeatherData {
 
     public void setCoord(WeatherCoord coord) {
         this.coord = coord;
+    }
+
+    public WeatherSys getSys() {
+        return sys;
+    }
+
+    public void setSys(WeatherSys sys) {
+        this.sys = sys;
     }
 }

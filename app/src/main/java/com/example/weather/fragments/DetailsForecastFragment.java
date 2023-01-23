@@ -8,59 +8,47 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.weather.R;
+import com.example.weather.MainActivity;
+import com.example.weather.databinding.FragmentDetailsForecastBinding;
+import com.example.weather.models.api.WeatherData;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link DetailsForecastFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+
 public class DetailsForecastFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    public DetailsForecastFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment DetailsForecastFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static DetailsForecastFragment newInstance(String param1, String param2) {
-        DetailsForecastFragment fragment = new DetailsForecastFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    private MainActivity activity;
+    private FragmentDetailsForecastBinding binding;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_details_forecast, container, false);
+        activity = (MainActivity)requireActivity();
+        activity.getDate().observe(getViewLifecycleOwner(), this::updateUI);
+
+        binding = FragmentDetailsForecastBinding.inflate(inflater, container, false);
+
+        binding.detailsWrapper.setVisibility(View.INVISIBLE);
+
+        return binding.getRoot();
+    }
+
+    private void updateUI(WeatherData data) {
+        binding.detailsWrapper.setVisibility(View.VISIBLE);
+
+        binding.txtWindSpeed.setText(Float.toString(data.getWind().getSpeed()) + (MainActivity.units.equals("metric") ? " m/s" : " m/h"));
+        binding.txtVisibility.setText(data.getVisibility() + " km");
+        binding.txtHumidity.setText(data.getMain().getHumidity() + " %");
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
+        Date sunrise = new Date(data.getSys().getSunrise() * 1000);
+        Date sunset = new Date(data.getSys().getSunset() * 1000);
+        binding.txtSunrise.setText(simpleDateFormat.format(sunrise));
+        binding.txtSunset.setText(simpleDateFormat.format(sunset));
     }
 }

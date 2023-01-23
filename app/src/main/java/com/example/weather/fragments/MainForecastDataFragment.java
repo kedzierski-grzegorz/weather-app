@@ -16,11 +16,6 @@ import com.example.weather.models.api.WeatherData;
 
 import java.text.SimpleDateFormat;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link MainForecastDataFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class MainForecastDataFragment extends Fragment {
 
     private MainActivity activity;
