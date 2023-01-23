@@ -169,7 +169,9 @@ public class MainActivity extends AppCompatActivity {
                 (
                     forceReload ||
                     d == null ||
+                    d.getCurrentForecast() == null ||
                     !d.getCurrentForecast().getName().equals(cityName) ||
+                    d.getDailyForecast() == null ||
                     settingsChanged
                 )
         ) {
@@ -234,8 +236,10 @@ public class MainActivity extends AppCompatActivity {
                 showMessage("Internet connection is not available, therefore the data could be not up-to-date.");
             }
 
-            setData(d.getCurrentForecast());
-            setDailyForecast(d.getDailyForecast());
+            if (d.getCurrentForecast() != null)
+                setData(d.getCurrentForecast());
+            if (d.getDailyForecast() != null)
+                setDailyForecast(d.getDailyForecast());
         } else {
             showMessage("Internet connection is not available.");
         }

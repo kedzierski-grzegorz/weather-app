@@ -40,6 +40,7 @@ public class City {
     }
 
     public static List<City> cities = Arrays.asList(
+            new City("Lodz", 51.7687f, 19.4569f),
             new City("London", 51.5085f, -0.1257f),
             new City("Warsaw", 52.2319f, 21.0067f),
             new City("Chicago", 41.8755f, -87.6244f)
