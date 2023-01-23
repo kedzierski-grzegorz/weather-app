@@ -1,20 +1,13 @@
 package com.example.weather;
 
 import android.content.Context;
-import android.view.View;
 
-import com.example.weather.api.WeatherData;
+import com.example.weather.models.api.WeatherData;
 import com.google.gson.Gson;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 public class FileManager {

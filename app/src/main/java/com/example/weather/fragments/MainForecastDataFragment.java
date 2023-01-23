@@ -8,7 +8,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.weather.MainActivity;
 import com.example.weather.R;
+import com.example.weather.Utils;
+import com.example.weather.databinding.FragmentMainForecastDataBinding;
+import com.example.weather.models.api.WeatherData;
+
+import java.text.SimpleDateFormat;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -17,50 +23,41 @@ import com.example.weather.R;
  */
 public class MainForecastDataFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    public MainForecastDataFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment MainForecastDataFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static MainForecastDataFragment newInstance(String param1, String param2) {
-        MainForecastDataFragment fragment = new MainForecastDataFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    private MainActivity activity;
+    private FragmentMainForecastDataBinding binding;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_main_forecast_data, container, false);
+        activity = (MainActivity)requireActivity();
+        activity.getDate().observe(getViewLifecycleOwner(), this::updateUI);
+        binding = FragmentMainForecastDataBinding.inflate(inflater, container, false);
+
+        binding.mainDataWrapper.setVisibility(View.INVISIBLE);
+
+        return binding.getRoot();
+    }
+
+    private void updateUI(WeatherData data) {
+        binding.mainDataWrapper.setVisibility(View.VISIBLE);
+
+        binding.txtCity.setText(data.getName());
+        binding.txtCoor.setText(String.format("lat: %s lon: %s", data.getCoord().getLat(), data.getCoord().getLon()));
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        binding.txtTime.setText(simpleDateFormat.format(data.getSaveDate()));
+
+        String tempSymbol = MainActivity.units.equals("metric") ? " °C" : " °F";
+        binding.txtTemp.setText(Float.toString(data.getMain().getTemp()) + tempSymbol);
+        binding.txtPress.setText(Float.toString(data.getMain().getPressure()) + " hPa");
+        binding.txtDesc.setText(data.getWeather()[0].getDescription());
+
+        binding.imgIcon.setImageResource(Utils.getResId("_" + data.getWeather()[0].getIcon(), R.drawable.class));
     }
 }
