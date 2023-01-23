@@ -3,8 +3,6 @@ package com.example.weather.models.api;
 import java.util.Date;
 
 public class WeatherData {
-    private Date saveDate;
-
     private String name;
 
     private WeatherMain main;
@@ -14,14 +12,7 @@ public class WeatherData {
     private WeatherWind wind;
     private WeatherCoord coord;
     private WeatherSys sys;
-
-    public Date getSaveDate() {
-        return saveDate;
-    }
-
-    public void setSaveDate(Date saveDate) {
-        this.saveDate = saveDate;
-    }
+    private long dt;
 
     public WeatherMain getMain() {
         return main;
@@ -85,5 +76,13 @@ public class WeatherData {
 
     public void setSys(WeatherSys sys) {
         this.sys = sys;
+    }
+
+    public long getDt() {
+        return dt;
+    }
+
+    public void setDt(long dt) {
+        this.dt = dt;
     }
 }

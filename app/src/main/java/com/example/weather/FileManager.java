@@ -2,7 +2,7 @@ package com.example.weather;
 
 import android.content.Context;
 
-import com.example.weather.models.api.WeatherData;
+import com.example.weather.models.api.WeatherCache;
 import com.google.gson.Gson;
 
 import java.io.FileInputStream;
@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.Date;
 
 public class FileManager {
-    public static WeatherData readLastCurrentWeather(Context context) {
+    public static WeatherCache readCacheData(Context context) {
         try {
             FileInputStream stream = context.openFileInput("current_data.json");
             StringBuilder json = new StringBuilder();
@@ -21,19 +21,19 @@ public class FileManager {
             }
             stream.close();
 
-            WeatherData data = new Gson().fromJson(json.toString(), WeatherData.class);
+            WeatherCache data = new Gson().fromJson(json.toString(), WeatherCache.class);
 
-            if (true) {
-                return data;
-            } else {
+            if (Utils.addHoursToJavaUtilDate(data.getSaveDate(), 1).compareTo(new Date()) <= 0) {
                 return null;
+            } else {
+                return data;
             }
         } catch (IOException e) {
             return null;
         }
     }
 
-    public static void writeLastCurrentWeather(Context context, WeatherData data) {
+    public static void writeCacheData(Context context, WeatherCache data) {
         try {
             data.setSaveDate(new Date());
             String json = new Gson().toJson(data);

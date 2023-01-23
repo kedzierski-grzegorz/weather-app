@@ -21,6 +21,9 @@ import android.view.View;
 
 import com.example.weather.api.RetrofitClient;
 import com.example.weather.models.Units;
+import com.example.weather.models.api.DailyForecast;
+import com.example.weather.models.api.DayForecast;
+import com.example.weather.models.api.WeatherCache;
 import com.example.weather.models.api.WeatherData;
 import com.example.weather.api.WeatherService;
 import com.example.weather.databinding.ActivityMainBinding;
@@ -29,7 +32,7 @@ import com.example.weather.fragments.DetailsForecastFragment;
 import com.example.weather.fragments.MainForecastDataFragment;
 import com.google.android.material.tabs.TabLayoutMediator;
 
-import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 
 import retrofit2.Call;
@@ -41,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int NUM_PAGES = 3;
     private FragmentStateAdapter pagerAdapter;
 
+    public static int loadedData = 0;
     public static boolean settingsChanged = false;
     public static String cityName = "";
     public static float lon = 0;
@@ -53,6 +57,14 @@ public class MainActivity extends AppCompatActivity {
     }
     public LiveData<WeatherData> getDate(){
         return data;
+    }
+
+    private final MutableLiveData<DailyForecast> dailyForecast = new MutableLiveData<>();
+    public void setDailyForecast(DailyForecast value){
+        dailyForecast.setValue(value);
+    }
+    public LiveData<DailyForecast> getDailyForecast(){
+        return dailyForecast;
     }
 
     @Override
@@ -142,36 +154,70 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadData(boolean forceReload) {
-        WeatherData d = FileManager.readLastCurrentWeather(this);
+        WeatherCache d = FileManager.readCacheData(this);
         if (
                 forceReload ||
                 d == null ||
-                !d.getName().equals(cityName) ||
-                settingsChanged ||
-                Utils.addHoursToJavaUtilDate(d.getSaveDate(), 1).compareTo(new Date()) <= 0
+                !d.getCurrentForecast().getName().equals(cityName) ||
+                settingsChanged
         ) {
+            loadedData = 0;
+
             WeatherService weatherService = RetrofitClient.getRetrofitClient().create(WeatherService.class);
 
             ProgressDialog dialog = ProgressDialog.show(MainActivity.this, "", "Loading. Please wait...", true);
 
             Context ctx = this;
 
+            WeatherCache cache = new WeatherCache();
+
             weatherService.getCurrentWeather(lat, lon, units).enqueue(new Callback<WeatherData>() {
                 @Override
                 public void onResponse(Call<WeatherData> call, Response<WeatherData> response) {
-                    WeatherData data = response.body();
-                    FileManager.writeLastCurrentWeather(ctx, data);
-                    setData(data);
-                    dialog.dismiss();
+                    if (response.isSuccessful()) {
+                        WeatherData data = response.body();
+                        cache.setCurrentForecast(data);
+                        setData(data);
+                    }
+                    MainActivity.loadedData++;
+                    if (MainActivity.loadedData >= 2)
+                        dialog.dismiss();
                 }
 
                 @Override
                 public void onFailure(Call<WeatherData> call, Throwable t) {
-                    dialog.dismiss();
+                    MainActivity.loadedData++;
+                    if (MainActivity.loadedData >= 2)
+                        dialog.dismiss();
+                }
+            });
+
+            weatherService.getDailyWeather(lat, lon, units).enqueue(new Callback<DailyForecast>() {
+                @Override
+                public void onResponse(Call<DailyForecast> call, Response<DailyForecast> response) {
+                    if (response.isSuccessful()) {
+                        DailyForecast data = response.body();
+                        data.setList(Arrays.stream(data.getList()).filter(d -> new Date(d.getDt() * 1000).getHours() == 12).toArray(DayForecast[]::new));
+                        data.setCnt(data.getList().length);
+                        cache.setDailyForecast(data);
+                        FileManager.writeCacheData(ctx, cache);
+                        setDailyForecast(data);
+                    }
+                    MainActivity.loadedData++;
+                    if (MainActivity.loadedData >= 2)
+                        dialog.dismiss();
+                }
+
+                @Override
+                public void onFailure(Call<DailyForecast> call, Throwable t) {
+                    MainActivity.loadedData++;
+                    if (MainActivity.loadedData >= 2)
+                        dialog.dismiss();
                 }
             });
         } else {
-            setData(d);
+            setData(d.getCurrentForecast());
+            setDailyForecast(d.getDailyForecast());
         }
     }
 

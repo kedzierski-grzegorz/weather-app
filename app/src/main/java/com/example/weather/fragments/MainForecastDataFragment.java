@@ -15,6 +15,7 @@ import com.example.weather.databinding.FragmentMainForecastDataBinding;
 import com.example.weather.models.api.WeatherData;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class MainForecastDataFragment extends Fragment {
 
@@ -46,7 +47,7 @@ public class MainForecastDataFragment extends Fragment {
         binding.txtCoor.setText(String.format("lat: %s lon: %s", data.getCoord().getLat(), data.getCoord().getLon()));
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        binding.txtTime.setText(simpleDateFormat.format(data.getSaveDate()));
+        binding.txtTime.setText(simpleDateFormat.format(Utils.addHoursToJavaUtilDate(new Date(data.getDt() * 1000), 1)));
 
         String tempSymbol = MainActivity.units.equals("metric") ? " °C" : " °F";
         binding.txtTemp.setText(Float.toString(data.getMain().getTemp()) + tempSymbol);
